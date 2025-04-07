@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Generation & Pathfinding</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>Maze Generator & Solver <span class="signature">by Ravgo</span></h1>
+    </header>
+    
+    <div class="app-container">
+        <!-- Left Control Panel -->
+        <div class="control-panel">
+            <div class="control-group">
+                <h3>Maze Size:</h3>
+                <div class="dimension-inputs">
+                    <input type="number" id="mazeWidth" min="5" max="50" value="24">
+                    <span class="dimension-label">x</span>
+                    <input type="number" id="mazeHeight" min="5" max="50" value="24">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Cell Size:</h3>
+                <div class="slider-container">
+                    <input type="range" id="cellSizeRange" min="8" max="20" value="16">
+                    <span class="slider-value" id="cellSizeValue">16px</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Generation Algorithm:</h3>
+                <select id="algorithmSelect" class="algorithm-select">
+                    <option value="dfs">Depth-First Search</option>
+                    <option value="prim" selected>Prim's Algorithm</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Generation Speed:</h3>
+                <div class="speed-buttons">
+                    <button class="speed-btn" data-speed="slow">Slow</button>
+                    <button class="speed-btn active" data-speed="medium">Medium</button>
+                    <button class="speed-btn" data-speed="fast">Fast</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Solving Algorithm:</h3>
+                <select id="algorithmSolverSelect" class="algorithm-select">
+                    <option value="astar" selected>A* Pathfinding</option>
+                    <option value="dijkstra">Dijkstra's Algorithm</option>
+                    <option value="greedy">Greedy Best-First</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Solving Speed:</h3>
+                <div class="speed-buttons">
+                    <button class="speed-btn solve-speed" data-speed="slow">Slow</button>
+                    <button class="speed-btn solve-speed active" data-speed="medium">Medium</button>
+                    <button class="speed-btn solve-speed" data-speed="fast">Fast</button>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="startStopBtn" class="primary-btn">Generate Maze</button>
+                <button id="solveBtn" class="primary-btn" disabled>Solve Maze</button>
+                <button id="resetBtn" class="secondary-btn">Reset</button>
+            </div>
+        </div>
+        
+        <!-- Right Content Area -->
+        <div class="main-content">
+            <!-- Maze Canvas -->
+            <div class="maze-container">
+                <canvas id="mazeCanvas"></canvas>
+            </div>
+            
+            <!-- Algorithm Stats -->
+            <div class="stats-container">
+                <h2 class="stats-title">Algorithm Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Algorithm:</div>
+                        <div class="stat-value" id="algorithm">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Progress:</div>
+                        <div class="stat-value" id="progress">0%</div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Operation Time:</div>
+                        <div class="stat-value" id="operationTime">0ms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Cells Visited:</div>
+                        <div class="stat-value" id="cellsProcessed">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Computation Speed:</div>
+                        <div class="stat-value" id="computationSpeed">0 cells/s</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Solution Length:</div>
+                        <div class="stat-value" id="solutionLength">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <script src="maze-solver.js"></script>
+</body>
+</html>
