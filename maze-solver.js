@@ -354,6 +354,309 @@ function greedyStep() {
     return true; // Algorithm continues
 }
 
+// Dead End Filling algorithm state
+let deadEnds = [];
+
+// Initialize Dead End Filling algorithm
+function initDeadEndFilling() {
+    deadEnds = [];
+    solutionPath = [];
+    
+    // Find all dead ends - cells with only one open passage
+    for (let y = 0; y < mazeHeight; y++) {
+        for (let x = 0; x < mazeWidth; x++) {
+            // Skip entrance and exit
+            if ((x === entranceCell.x && y === entranceCell.y) || 
+                (x === exitCell.x && y === exitCell.y)) {
+                continue;
+            }
+            
+            const cell = grid[y][x];
+            const wallCount = [cell.walls.top, cell.walls.right, cell.walls.bottom, cell.walls.left]
+                .filter(Boolean).length;
+            
+            // If the cell has three walls, it's a dead end
+            if (wallCount === 3) {
+                deadEnds.push({ x, y });
+            }
+        }
+    }
+    
+    // Mark entrance and exit as visited
+    openSet.push({ x: entranceCell.x, y: entranceCell.y });
+    closedSet.push({ x: exitCell.x, y: exitCell.y });
+}
+
+function deadEndFillingStep() {
+    if (deadEnds.length === 0) {
+        findSolutionPath(); // Once all dead ends are filled, solve
+        return false;
+    }
+
+    const { x, y } = deadEnds.pop();
+    const cell = grid[y][x];
+
+    // Count open directions
+    const openDirs = [];
+    if (!cell.walls.top) openDirs.push({ x, y: y - 1, dir: 'top', opp: 'bottom' });
+    if (!cell.walls.right) openDirs.push({ x: x + 1, y, dir: 'right', opp: 'left' });
+    if (!cell.walls.bottom) openDirs.push({ x, y: y + 1, dir: 'bottom', opp: 'top' });
+    if (!cell.walls.left) openDirs.push({ x: x - 1, y, dir: 'left', opp: 'right' });
+
+    if (openDirs.length !== 1) {
+        // Not a dead end anymore, skip
+        return true;
+    }
+
+    const next = openDirs[0];
+    const nextCell = grid[next.y][next.x];
+
+    // Skip entrance/exit
+    if ((next.x === entranceCell.x && next.y === entranceCell.y) ||
+        (next.x === exitCell.x && next.y === exitCell.y)) {
+        return true;
+    }
+
+    // Fill the passage (block it)
+    cell.walls[next.dir] = true;
+    nextCell.walls[next.opp] = true;
+
+    // Count open passages in the neighbor now
+    const neighborOpenWalls = [
+        !nextCell.walls.top,
+        !nextCell.walls.right,
+        !nextCell.walls.bottom,
+        !nextCell.walls.left,
+    ].filter(Boolean).length;
+
+    if (neighborOpenWalls === 1) {
+        // Neighbor is now a dead end
+        deadEnds.push({ x: next.x, y: next.y });
+    }
+
+    closedSet.push({ x, y });
+    nodesVisited++;
+    solverProcessingCounter++;
+
+    return true;
+}
+
+
+// Flood Fill algorithm state
+let distances = [];
+let maxDistance = 0;
+
+// Initialize Flood Fill algorithm
+function initFloodFill() {
+    // Create a 2D array to store distances from the entrance
+    distances = Array(mazeHeight).fill().map(() => Array(mazeWidth).fill(Infinity));
+    
+    // Set entrance distance to 0
+    distances[entranceCell.y][entranceCell.x] = 0;
+    
+    // Start BFS from entrance
+    openSet = [{ x: entranceCell.x, y: entranceCell.y }];
+    closedSet = [];
+    maxDistance = 0;
+}
+
+// Flood Fill algorithm step
+function floodFillStep() {
+    if (openSet.length === 0) {
+        // BFS completed, construct the path
+        constructFloodFillPath();
+        return false;
+    }
+    
+    // Get next cell from the queue
+    const current = openSet.shift();
+    const { x, y } = current;
+    
+    // Mark as visited
+    closedSet.push(current);
+    nodesVisited++;
+    solverProcessingCounter++;
+    
+    // Get current distance
+    const distance = distances[y][x];
+    
+    // Update max distance
+    if (distance > maxDistance) {
+        maxDistance = distance;
+    }
+    
+    // Check each direction
+    const cell = grid[y][x];
+    
+    // Check top
+    if (!cell.walls.top && y > 0 && distances[y-1][x] === Infinity) {
+        distances[y-1][x] = distance + 1;
+        openSet.push({ x, y: y-1 });
+    }
+    
+    // Check right
+    if (!cell.walls.right && x < mazeWidth-1 && distances[y][x+1] === Infinity) {
+        distances[y][x+1] = distance + 1;
+        openSet.push({ x: x+1, y });
+    }
+    
+    // Check bottom
+    if (!cell.walls.bottom && y < mazeHeight-1 && distances[y+1][x] === Infinity) {
+        distances[y+1][x] = distance + 1;
+        openSet.push({ x, y: y+1 });
+    }
+    
+    // Check left
+    if (!cell.walls.left && x > 0 && distances[y][x-1] === Infinity) {
+        distances[y][x-1] = distance + 1;
+        openSet.push({ x: x-1, y });
+    }
+    
+    return true;
+}
+
+// Construct path using the distance map
+function constructFloodFillPath() {
+    // Start from the exit
+    let current = { x: exitCell.x, y: exitCell.y };
+    solutionPath = [current];
+    
+    // If exit is unreachable, return
+    if (distances[current.y][current.x] === Infinity) {
+        return;
+    }
+    
+    // Follow the path of decreasing distances back to the entrance
+    while (!(current.x === entranceCell.x && current.y === entranceCell.y)) {
+        const { x, y } = current;
+        const currentDistance = distances[y][x];
+        const cell = grid[y][x];
+        
+        let bestNeighbor = null;
+        let bestDistance = Infinity;
+        
+        // Check all accessible neighbors
+        if (!cell.walls.top && y > 0) {
+            const dist = distances[y-1][x];
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestNeighbor = { x, y: y-1 };
+            }
+        }
+        
+        if (!cell.walls.right && x < mazeWidth-1) {
+            const dist = distances[y][x+1];
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestNeighbor = { x: x+1, y };
+            }
+        }
+        
+        if (!cell.walls.bottom && y < mazeHeight-1) {
+            const dist = distances[y+1][x];
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestNeighbor = { x, y: y+1 };
+            }
+        }
+        
+        if (!cell.walls.left && x > 0) {
+            const dist = distances[y][x-1];
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestNeighbor = { x: x-1, y };
+            }
+        }
+        
+        // Move to the best neighbor
+        if (bestNeighbor) {
+            current = bestNeighbor;
+            solutionPath.unshift(current);
+        } else {
+            break; // No path found
+        }
+    }
+    
+    if (solutionLengthText) {
+        solutionLengthText.textContent = solutionPath.length;
+    }
+}
+
+// Find solution path after filling dead ends
+function findSolutionPath() {
+    // Create a grid representation of the maze with dead ends filled
+    const solvedGrid = Array.from({ length: mazeHeight }, () => Array(mazeWidth).fill(false));
+
+    // Mark all cells in the closed set as filled
+    for (const cell of closedSet) {
+        if (cell && isInBounds(cell.x, cell.y)) {
+            solvedGrid[cell.y][cell.x] = true;
+        }
+    }
+
+    // Mark entrance and exit as walkable
+    if (isInBounds(entranceCell.x, entranceCell.y)) {
+        solvedGrid[entranceCell.y][entranceCell.x] = false;
+    }
+    if (isInBounds(exitCell.x, exitCell.y)) {
+        solvedGrid[exitCell.y][exitCell.x] = false;
+    }
+
+    // Use BFS to find the path
+    const queue = [{
+        x: entranceCell.x,
+        y: entranceCell.y,
+        path: []
+    }];
+    const visited = new Set();
+    visited.add(`${entranceCell.x},${entranceCell.y}`);
+
+    while (queue.length > 0) {
+        const { x, y, path } = queue.shift();
+
+        if (x === exitCell.x && y === exitCell.y) {
+            solutionPath = [...path, { x, y }];
+            if (solutionLengthText) {
+                solutionLengthText.textContent = solutionPath.length;
+            }
+            return;
+        }
+
+        if (!isInBounds(x, y)) continue;
+
+        const cell = grid[y][x];
+        if (!cell || !cell.walls) continue;
+
+        const directions = [
+            { dx: 0, dy: -1, wall: 'top' },
+            { dx: 1, dy: 0, wall: 'right' },
+            { dx: 0, dy: 1, wall: 'bottom' },
+            { dx: -1, dy: 0, wall: 'left' }
+        ];
+
+        for (const { dx, dy, wall } of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+            const key = `${nx},${ny}`;
+
+            if (
+                !cell.walls[wall] &&
+                isInBounds(nx, ny) &&
+                !solvedGrid[ny][nx] &&
+                !visited.has(key)
+            ) {
+                queue.push({ x: nx, y: ny, path: [...path, { x, y }] });
+                visited.add(key);
+            }
+        }
+    }
+}
+
+function isInBounds(x, y) {
+    return x >= 0 && x < mazeWidth && y >= 0 && y < mazeHeight;
+}
+
+
 // Perform one algorithm step
 function solverStep() {
     let result = false;
@@ -367,6 +670,12 @@ function solverStep() {
             break;
         case 'greedy':
             result = greedyStep();
+            break;
+        case 'def':
+            result = deadEndFillingStep();
+            break;
+        case 'floodfill':
+            result = floodFillStep();
             break;
     }
     
@@ -525,6 +834,12 @@ function toggleSolving() {
                     break;
                 case 'greedy':
                     initGreedySolver();
+                    break;
+                case 'def':
+                    initDeadEndFilling();
+                    break;
+                case 'floodfill':
+                    initFloodFill();
                     break;
             }
         }
