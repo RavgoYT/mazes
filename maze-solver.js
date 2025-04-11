@@ -19,10 +19,10 @@ let processingNodesRate = 0;
 let solverProcessingCounter = 0;
 let lastSolverRateUpdate = 0;
 
-// Additional colors for solver visualization
-colors.openSet = '#e07a5f';      // Warm coral for open set
-colors.closedSet = '#3d405b';    // Charcoal navy for closed set
-colors.solution = '#ffd166';     // Bright yellow for the solution path
+// colors for visualization
+colors.openSet = '#e07a5f';      // 
+colors.closedSet = '#3d405b';    // 
+colors.solution = '#ffd166';     // 
 
 // Node for pathfinding
 class Node {
@@ -31,28 +31,26 @@ class Node {
         this.y = y;
         this.parent = parent;
         
-        // A* scores
+        // A* scores ignore those comments
         this.g = 0; // Cost from start to current node
         this.h = 0; // Heuristic (estimated cost from current to goal)
         this.f = 0; // Total cost (g + h)
     }
     
-    // Get position as string for comparison
     toString() {
         return `${this.x},${this.y}`;
     }
 }
 
-// Initialize solve button and algorithm selector
+// Initz solve button and algorithm selector
 function initSolver() {
     console.log("Initializing solver...");
     
-    // Get correct UI elements from the DOM
+    // Get correct UI elements fromDOM
     solveBtn = document.getElementById('solveBtn');
     algorithmSolverSelect = document.getElementById('algorithmSolverSelect');
     solutionLengthText = document.getElementById('solutionLength');
     
-    // Make sure the solve button exists and add event listener
     if (solveBtn) {
         solveBtn.addEventListener('click', toggleSolving);
         solveBtn.disabled = !mazeCompleted;
@@ -61,7 +59,6 @@ function initSolver() {
         console.error("Solve button not found!");
     }
     
-    // Make sure algorithm selector exists and add event listener
     if (algorithmSolverSelect) {
         solverAlgorithm = algorithmSolverSelect.value;
         algorithmSolverSelect.addEventListener('change', () => {
@@ -173,7 +170,7 @@ function astarStep() {
     
     // Check if reached goal
     if (current.x === exitCell.x && current.y === exitCell.y) {
-        // Reconstruct path
+
         let temp = current;
         solutionPath = [];
         while (temp) {
@@ -255,7 +252,7 @@ function dijkstraStep() {
             solutionLengthText.textContent = solutionPath.length;
         }
         
-        return false; // Algorithm is done
+        return false; // Algorithm doneee
     }
     
     // Move current from open to closed set
@@ -281,10 +278,10 @@ function dijkstraStep() {
         if (!openNode) {
             // New node, add to open set
             neighbor.g = tentativeG;
-            neighbor.f = neighbor.g; // For Dijkstra, f = g (no heuristic)
+            neighbor.f = neighbor.g; // f = g (
             openSet.push(neighbor);
         } else if (tentativeG < openNode.g) {
-            // Better path found to existing node
+            // Better path found?
             openNode.g = tentativeG;
             openNode.parent = current;
             openNode.f = openNode.g;
@@ -362,7 +359,7 @@ function initDeadEndFilling() {
     deadEnds = [];
     solutionPath = [];
     
-    // Find all dead ends - cells with only one open passage
+    // Find all dead ends
     for (let y = 0; y < mazeHeight; y++) {
         for (let x = 0; x < mazeWidth; x++) {
             // Skip entrance and exit
@@ -396,7 +393,7 @@ function deadEndFillingStep() {
     const { x, y } = deadEnds.pop();
     const cell = grid[y][x];
 
-    // Count open directions
+    // Cnt open directions
     const openDirs = [];
     if (!cell.walls.top) openDirs.push({ x, y: y - 1, dir: 'top', opp: 'bottom' });
     if (!cell.walls.right) openDirs.push({ x: x + 1, y, dir: 'right', opp: 'left' });
@@ -404,7 +401,7 @@ function deadEndFillingStep() {
     if (!cell.walls.left) openDirs.push({ x: x - 1, y, dir: 'left', opp: 'right' });
 
     if (openDirs.length !== 1) {
-        // Not a dead end anymore, skip
+        // not a dead end anymore! skip!
         return true;
     }
 
@@ -488,13 +485,13 @@ function floodFillStep() {
     // Check each direction
     const cell = grid[y][x];
     
-    // Check top
+    //  top
     if (!cell.walls.top && y > 0 && distances[y-1][x] === Infinity) {
         distances[y-1][x] = distance + 1;
         openSet.push({ x, y: y-1 });
     }
     
-    // Check right
+    // check right
     if (!cell.walls.right && x < mazeWidth-1 && distances[y][x+1] === Infinity) {
         distances[y][x+1] = distance + 1;
         openSet.push({ x: x+1, y });
@@ -506,7 +503,7 @@ function floodFillStep() {
         openSet.push({ x, y: y+1 });
     }
     
-    // Check left
+    // Checkleft
     if (!cell.walls.left && x > 0 && distances[y][x-1] === Infinity) {
         distances[y][x-1] = distance + 1;
         openSet.push({ x: x-1, y });
@@ -584,7 +581,7 @@ function constructFloodFillPath() {
 
 // Find solution path after filling dead ends
 function findSolutionPath() {
-    // Create a grid representation of the maze with dead ends filled
+    // filled dead ends carve path out
     const solvedGrid = Array.from({ length: mazeHeight }, () => Array(mazeWidth).fill(false));
 
     // Mark all cells in the closed set as filled
@@ -682,7 +679,7 @@ function solverStep() {
     return result;
 }
 
-// Enhanced draw grid function to include solver visualization
+// draw grid function to include solver visualization
 function drawGridWithSolver() {
     ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);

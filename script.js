@@ -162,6 +162,11 @@ function getAlgorithmName(alg) {
     }
 }
 
+function updateTime() {
+
+
+}
+
 // Draw the grid
 function drawGrid() {
     ctx.fillStyle = colors.background;
@@ -277,7 +282,7 @@ function initAlgorithm() {
             const startY = entranceCell.y;
             grid[startY][startX].visited = true;
             visitedCells++;
-            frontier.push({ x: startX, y: startY });  // Fixed y coordinate from startX to startY
+            frontier.push({ x: startX, y: startY });  // i think this is supposed to be startX, startX, but it's working correctly right now, so maybe not?
             break;
         case 'ellers':
             initEller();
@@ -391,10 +396,9 @@ function dfsStep() {
     return true;
 }
 
-// Hunt and Kill algorithm state
+// Hunt and Kill alg
 let huntRow = 0;
 
-// Hunt and Kill algorithm step
 function huntAndKillStep() {
     // If we have a current cell, try to carve a path from it
     if (currentCell) {
@@ -465,7 +469,7 @@ function huntAndKillStep() {
             }
         }
         
-        // If we've scanned the entire grid and found nothing, we're done
+        // If we've scanned the entire grid and found nothing, we're done!!
         huntRow = 0;
         return false;
     }
@@ -494,7 +498,7 @@ function initEller() {
     visitedCells++;
 }
 
-// Eller's algorithm step - processes one row at a time
+// Eller's algorithm step - goin' one row at a time
 function ellerStep() {
     console.log('works')
     if (ellerRow >= mazeHeight) {
@@ -795,8 +799,7 @@ function findInPath(x, y) {
     return -1;
 }
 
-// Wilson's algorithm step
-// Wilson's algorithm step
+// Wislon Algorithm
 function wilsonStep() {
     if (unvisitedCells.length === 0) {
         return false; // Done
@@ -826,7 +829,7 @@ function wilsonStep() {
         if (pathIndex !== -1) {
             // Found a loop, erase it
             
-            // First, clear the 'inPath' flag from all cells that will be erased
+            // clear the 'inPath' flag from all cells that will be erased
             for (let i = pathIndex + 1; i < currentPath.length; i++) {
                 const cell = currentPath[i];
                 grid[cell.y][cell.x].inPath = false;
@@ -904,7 +907,7 @@ function initBinaryTree() {
     binaryTreeCol = 0;
 
         // Randomly choose a configuration
-    // 0: North-East, 1: North-West, 2: South-East, 3: South-West
+    // 0: NE, 1: NW, 2: SE, 3: SW
     binaryTreeConfig = Math.floor(Math.random() * 4);
 }
 
@@ -929,19 +932,19 @@ function binaryTreeStep() {
     const possibleDirections = [];
     
     switch(binaryTreeConfig) {
-        case 0: // North-East
+        case 0: // NorthE
             if (binaryTreeRow > 0) possibleDirections.push({ x: binaryTreeCol, y: binaryTreeRow - 1, direction: 'top', opposite: 'bottom' });
             if (binaryTreeCol < mazeWidth - 1) possibleDirections.push({ x: binaryTreeCol + 1, y: binaryTreeRow, direction: 'right', opposite: 'left' });
             break;
-        case 1: // North-West
+        case 1: // NorthWest
             if (binaryTreeRow > 0) possibleDirections.push({ x: binaryTreeCol, y: binaryTreeRow - 1, direction: 'top', opposite: 'bottom' });
             if (binaryTreeCol > 0) possibleDirections.push({ x: binaryTreeCol - 1, y: binaryTreeRow, direction: 'left', opposite: 'right' });
             break;
-        case 2: // South-East
+        case 2: // SE
             if (binaryTreeRow < mazeHeight - 1) possibleDirections.push({ x: binaryTreeCol, y: binaryTreeRow + 1, direction: 'bottom', opposite: 'top' });
             if (binaryTreeCol < mazeWidth - 1) possibleDirections.push({ x: binaryTreeCol + 1, y: binaryTreeRow, direction: 'right', opposite: 'left' });
             break;
-        case 3: // South-West
+        case 3: // SWest
             if (binaryTreeRow < mazeHeight - 1) possibleDirections.push({ x: binaryTreeCol, y: binaryTreeRow + 1, direction: 'bottom', opposite: 'top' });
             if (binaryTreeCol > 0) possibleDirections.push({ x: binaryTreeCol - 1, y: binaryTreeRow, direction: 'left', opposite: 'right' });
             break;
@@ -1090,9 +1093,9 @@ function toggleRunning() {
     }
 }
 
-// Initialize solver function stub (will be implemented in maze-solver.js)
+// Initialize solver function stub
 function initSolver() {
-    // This function will be overridden by maze-solver.js
+    // This function is to be overridden by maze-solver.js
     console.log('Solver initialized');
 }
 
@@ -1163,6 +1166,6 @@ document.addEventListener('DOMContentLoaded', function() {
     resetMaze();
 });
 
-// Initialize immediately to ensure canvas is drawn right away
+// Initialize first
 initCanvas();
 resetMaze();
