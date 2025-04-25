@@ -126,6 +126,7 @@ function resetMaze() {
     processingRate = 0;
     lastRateUpdate = 0;
     mazeCompleted = false;
+    startTime = undefined;
     
     initGrid();
     drawGrid();
@@ -162,8 +163,23 @@ function getAlgorithmName(alg) {
     }
 }
 
-function updateTime() {
+function updateTime(timestamp) {
 
+    // Calculate operation time since start
+    if (startTime === undefined && isRunning) {
+        startTime = timestamp;
+    }
+    
+    if (startTime !== undefined) {
+        const operationTime = timestamp - startTime;
+        operationTimeText.textContent = `${Math.floor(operationTime)}ms`;
+        
+        // Calculate and update computation speed
+        if (operationTime > 0) {
+            const speed = Math.floor((cellsProcessed * 1000) / operationTime);
+            computationSpeedText.textContent = `${speed} cells/s`;
+        }
+    }
 
 }
 
@@ -652,7 +668,6 @@ let kruskalSets = [];
 // Initialize Kruskal's algorithm
 function initKruskal() {
     edges = [];
-    kruskalSets = [];
     
     // Create a list of all walls/edges
     for (let y = 0; y < mazeHeight; y++) {
@@ -680,26 +695,31 @@ function initKruskal() {
         [edges[i], edges[j]] = [edges[j], edges[i]];
     }
     
-    // Create a set for each cell
-    for (let y = 0; y < mazeHeight; y++) {
-        for (let x = 0; x < mazeWidth; x++) {
-            kruskalSets.push({ x, y });
-        }
-    }
+    // Initialize disjoint-set for cells
+    // Each cell starts in its own set, indexed by y * mazeWidth + x
+    kruskalSets = new Array(mazeWidth * mazeHeight).fill(0)
+        .map((_, i) => i);
     
     // Mark the entrance cell as visited
     grid[entranceCell.y][entranceCell.x].visited = true;
     visitedCells++;
 }
 
-// Find the set for a cell
+// Find the root set for a cell (with path compression)
 function findSet(x, y) {
-    for (let i = 0; i < kruskalSets.length; i++) {
-        if (kruskalSets[i].x === x && kruskalSets[i].y === y) {
-            return i;
-        }
+    const index = y * mazeWidth + x;
+    if (kruskalSets[index] !== index) {
+        kruskalSets[index] = findSet(
+            kruskalSets[index] % mazeWidth,
+            Math.floor(kruskalSets[index] / mazeWidth)
+        );
     }
-    return -1;
+    return kruskalSets[index];
+}
+
+// Union two sets
+function unionSets(index1, index2) {
+    kruskalSets[index2] = index1;
 }
 
 // Kruskal's algorithm step
@@ -717,7 +737,7 @@ function kruskalStep() {
     const set2 = findSet(x2, y2);
     
     // If cells are in different sets, remove the wall between them
-    if (set1 !== set2 && set1 !== -1 && set2 !== -1) {
+    if (set1 !== set2) {
         // Remove wall between cells
         grid[y1][x1].walls[dir1] = false;
         grid[y2][x2].walls[dir2] = false;
@@ -732,9 +752,8 @@ function kruskalStep() {
             visitedCells++;
         }
         
-        // Union the sets (merge set2 into set1)
-        const toMerge = kruskalSets[set2];
-        kruskalSets.splice(set2, 1);
+        // Merge the sets
+        unionSets(set1, set2);
         
         // Update the currentCell to visualize progress
         currentCell = { x: x2, y: y2 };
@@ -1019,6 +1038,8 @@ function animate(timestamp) {
     
     // Calculate time difference
     const deltaTime = timestamp - lastFrameTime;
+
+    updateTime(timestamp);
     
     // Process algorithm steps with delay
     if (deltaTime >= speed.delay) {
